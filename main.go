@@ -26,6 +26,7 @@ var (
 	colorOpt    = flag.Bool("no-color", false, "disable color output in the results")
 	trimOpt     = flag.Bool("no-trim", false, "disable triming whitespace and trailing newlines")
 	humanOpt    = flag.Bool("no-human", false, "don't validate that its a human readable string, this could increase the amount of junk.")
+	sectionOpt  = flag.String("section","","an additional section you want to target")
 )
 
 // ReadSection is the main logic here
@@ -182,6 +183,9 @@ func main() {
 	sections := []string{".dynstr", ".rodata", ".rdata",
 		".strtab", ".comment", ".note",
 		".stab", ".stabstr", ".note.ABI-tag", ".note.gnu.build-id"}
+	if *sectionOpt != "" {
+		sections=append(sections,*sectionOpt)
+	}
 
 	for _, section := range sections {
 		ReadSection(r, section)
