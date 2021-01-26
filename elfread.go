@@ -94,6 +94,16 @@ func (r *ElfReader) ReaderParseStrings(buf []byte) map[uint64][]byte {
 	return strings
 }
 
+func (r *ElfReader) ReaderSectionNameList() []string {
+	fill := []string{}
+	for _,s := range r.ExecReader.Sections {
+		if len(s.Name) > 0 {
+			fill=append(fill,string(s.Name))
+		}
+	}
+	return fill
+}
+
 // Close softly close all of the instances associated
 // with the ElfReader
 func (r *ElfReader) Close() {

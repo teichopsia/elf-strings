@@ -27,6 +27,8 @@ var (
 	trimOpt     = flag.Bool("no-trim", false, "disable triming whitespace and trailing newlines")
 	humanOpt    = flag.Bool("no-human", false, "don't validate that its a human readable string, this could increase the amount of junk.")
 	sectionOpt  = flag.String("section","","an additional section you want to target")
+	sectAllOpt  = flag.Bool("allsect",false,"scan all sections")
+	prefaceOpt  = flag.Bool("preface",false,"preface output with binary name")
 )
 
 // ReadSection is the main logic here
@@ -51,7 +53,7 @@ func ReadSection(reader *ElfReader, section string) {
 		// Since maps in Go are unsorted, we're going to have to make
 		// a slice of keys, then iterate over this and just use the index
 		// from the map.
-		keys := make([]uint64, len(nodes))
+		keys := []uint64{}
 		for k, _ := range nodes {
 			keys = append(keys, k)
 		}
@@ -101,20 +103,27 @@ func ReadSection(reader *ElfReader, section string) {
 				str = UtilConvHex(str)
 			}
 
+			var line = ""
+			if *prefaceOpt {
+				line=fmt.Sprintf("%s ",*binaryOpt)
+			}
 			if *offsetOpt {
 				if os.Getenv("NO_COLOR") != "" || *colorOpt {
-					fmt.Printf("[%s+%#x]: %s\n",
+					line=fmt.Sprintf("%s[%s+%#x]: %s",
+						line,
 						section,
 						off,
 						str)
 				} else {
-					fmt.Printf("[%s%s]: %s\n",
+					line=fmt.Sprintf("%s[%s%s]: %s",
+						line,
 						color.BlueString(section),
 						color.GreenString("+%#x", off),
 						str)
 				}
+				fmt.Println(line)
 			} else {
-				fmt.Println(str)
+				fmt.Println(line,str)
 			}
 
 			if writer != nil {
@@ -129,6 +138,9 @@ func ReadSection(reader *ElfReader, section string) {
 // ReadBasic will read the basic information
 // about the ELF
 func ReadBasic(reader *ElfReader) {
+	if *infoOpt {
+		return
+	}
 	stat, err := reader.File.Stat()
 	if err != nil {
 		return
@@ -185,6 +197,9 @@ func main() {
 		".stab", ".stabstr", ".note.ABI-tag", ".note.gnu.build-id"}
 	if *sectionOpt != "" {
 		sections=append(sections,*sectionOpt)
+	}
+	if *sectAllOpt {
+		sections = r.ReaderSectionNameList()
 	}
 
 	for _, section := range sections {
